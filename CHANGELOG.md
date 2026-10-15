@@ -96,3 +96,107 @@ Conclusión
 La formulación quedaría:
 
 Predicción de la tasa de repitencia 2025 a partir de antecedentes educativos e infraestructura escolar observados durante 2024.
+
+---- revisar punto 4.4
+ver que variables vamos a tomar para la distribucion de la infraestructura
+Sí. El dataset tiene varias variables potencialmente útiles, pero no conviene incorporar todas directamente. Primero hay que distinguir entre cobertura de establecimientos, cantidad de equipamiento y categorías institucionales.
+Hallazgo sobre las variables actuales
+
+- electricidad: tiene valores entre 98% y 99%, por lo que está casi saturada. Sirve como control descriptivo, pero probablemente discrimine poco entre grupos.
+- internet_aulas: es más interesante porque varía entre 45% y 67%.
+- laboratorio: muestra diferencias relevantes entre grupos.
+- biblioteca: también tiene variabilidad útil.
+  Variables adicionales recomendadas
+  Conectividad por espacios
+  Calcular como porcentaje sobre localizacion:
+- espaciosconconexiónenlasaulas
+- espaciosconconexiónenlabibliotecas
+- espaciosconconexiónenellaboratorio
+- espaciosconconexióneneláreadeadministración
+- espaciosconconexiónenotroespaciodelestablecimiento
+  Podés construir:
+  indice_conectividad =
+  promedio de las cinco coberturas
+  También sería interesante comparar la conectividad administrativa con la pedagógica:
+  brecha_conectividad =
+  cobertura_administracion - cobertura_aulas
+  Fuentes de energía
+  Además de electricidadsi:
+- electricidadredpública
+- electricidadgrupoelectrógeno
+- electricidadpanelfotovoltaicosolar
+- electricidadgeneradoreólico
+- electricidadgeneradorhidráulico
+- electricidadotro
+  Estas variables permitirían medir dependencia de fuentes alternativas:
+  diversidad_energia =
+  cantidad de fuentes de energía disponibles
+  Las variables eólica e hidráulica probablemente sean muy poco frecuentes, por lo que primero hay que revisar su variabilidad.
+  Equipamiento institucional
+  Estas variables son conteos de aparatos, no porcentajes de establecimientos:
+- televisores;
+- proyectores o cañones;
+- scanners;
+- webcams;
+- impresoras;
+- servidores;
+- impresoras 3D;
+- equipos de sonido;
+- pizarras digitales.
+  No las uses directamente. Normalizalas:
+  equipamiento_por_establecimiento =
+  cantidad_de_aparatos / localizacion
+  Y, si tienen mucha asimetría:
+  equipamiento_transformado = np.log1p(equipamiento_por_establecimiento)
+  Podrías construir un índice reducido:
+  indice_equipamiento =
+  promedio estandarizado de los equipamientos normalizados
+  Biblioteca y laboratorio
+  Además de saber si existen, conviene medir si son espacios exclusivos:
+- bibliotecadisponedealmenosunasi
+- bibliotecafuncionaesespacioexclusivosi
+- disponedesalaolaboratoriodeinformáticasi
+- laboratoriofuncionaesespacioexclusivosi
+  Esto distingue entre “la institución tiene el espacio” y “el espacio funciona realmente como infraestructura especializada”.
+  Gestión escolar
+  Podés incluir:
+- sistemadegestiónescolarsi
+- sistemadegestiónescolarprovidoporelministerio
+- sistemadegestiónescolardesarrolladporterceros
+- sistemadegestiónescolarencargadoporelestablecimiento
+- sistemadegestiónescolarplanilladecalculo
+  Pero no uses simultáneamente sistemadegestiónescolarsi y todas sus modalidades específicas. Elegí una de estas alternativas:
+  Opción simple:
+  sistemadegestiónescolarsi
+  Opción detallada:
+  modalidades específicas, dejando una como categoría de referencia
+  Cooperadora
+  Las categorías:
+- cooperadoraconpersoneríajurídica
+- cooperadorasinpersoneríajurídica
+- cooperadorano
+  son mutuamente excluyentes. Para un modelo, no incluyas las tres juntas con intercepto. Dejá una como referencia.
+  Conjunto reducido que recomiendo
+  Para el EDA y un primer modelo usaría:
+
+1.  electricidadsi
+2.  indice_conectividad_espacios
+3.  internet_aulas
+4.  bibliotecadisponedealmenosunasi
+5.  bibliotecafuncionaesespacioexclusivosi
+6.  disponedesalaolaboratoriodeinformáticasi
+7.  laboratoriofuncionaesespacioexclusivosi
+8.  indice_equipamiento_establecimiento
+9.  indice_equipamiento_biblioteca
+10. sistemadegestiónescolarsi
+11. Una o dos variables de cooperadora.
+12. np.log1p(localizacion) como variable de control de tamaño.
+    Precauciones
+
+- No mezclar conteos brutos de equipamiento con localizacion.
+- No usar todas las variables originales y todos los índices compuestos a la vez.
+- Revisar columnas completamente vacías o casi constantes.
+- No convertir automáticamente todos los faltantes en cero sin verificar que un blanco realmente signifique ausencia.
+- Mantener todas estas variables como predictores de 2024.
+- Reservar la repitencia 2025 exclusivamente para construir el objetivo.
+  La ampliación más valiosa, en términos prácticos, sería: conectividad por espacios + equipamiento normalizado + existencia y exclusividad de biblioteca/laboratorio. Estas variables tienen más capacidad de diferenciar grupos que electricidad, que aparece prácticamente universalizada.
